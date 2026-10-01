@@ -6,7 +6,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from game.collision import is_caught
 from game.falling_object import FallingObject
-from game.game_engine import GameEngine
+from game.game_engine import (
+    MAX_OBJECTS,
+    MAX_SPAWN_INTERVAL_FRAMES,
+    MIN_SPAWN_INTERVAL_FRAMES,
+    MIN_SPAWN_SEPARATION,
+    GameEngine,
+)
 from game.renderer import WIDTH
 
 
@@ -62,6 +68,34 @@ class BasketMovementTests(unittest.TestCase):
             engine.basket.move(1, WIDTH)
 
         self.assertEqual(engine.basket.x, starting_x + 10 * engine.basket.speed)
+
+
+class SpawningTests(unittest.TestCase):
+    def test_spawn_positions_are_safe_and_not_repeated(self):
+        engine = GameEngine()
+        engine._spawn_object()
+        first_x = engine.objects[-1].x
+        engine._spawn_object()
+        second_x = engine.objects[-1].x
+
+        self.assertGreaterEqual(first_x - engine.objects[0].radius, 0)
+        self.assertLessEqual(second_x + engine.objects[1].radius, WIDTH)
+        self.assertGreaterEqual(abs(second_x - first_x), MIN_SPAWN_SEPARATION)
+
+    def test_object_count_is_capped(self):
+        engine = GameEngine()
+
+        for _ in range(MAX_OBJECTS + 5):
+            engine._spawn_object()
+
+        self.assertEqual(len(engine.objects), MAX_OBJECTS)
+
+    def test_spawn_delay_varies_within_configured_range(self):
+        engine = GameEngine()
+        delays = {engine._next_spawn_delay() for _ in range(100)}
+
+        self.assertTrue(all(MIN_SPAWN_INTERVAL_FRAMES <= delay <= MAX_SPAWN_INTERVAL_FRAMES for delay in delays))
+        self.assertGreater(len(delays), 1)
 
 
 if __name__ == "__main__":
