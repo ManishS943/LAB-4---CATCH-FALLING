@@ -21,3 +21,9 @@ class Basket:
             int(self.x - self.width / 2), int(self.y - self.height / 2),
             self.width, self.height,
         )
+
+    def move(self, direction, screen_width):
+        """Move continuously while a direction key is held and stay on-screen."""
+        self.x += direction * self.speed
+        half_width = self.width / 2
+        self.x = max(half_width, min(screen_width - half_width, self.x))

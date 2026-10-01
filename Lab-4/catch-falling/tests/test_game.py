@@ -7,6 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from game.collision import is_caught
 from game.falling_object import FallingObject
 from game.game_engine import GameEngine
+from game.renderer import WIDTH
 
 
 class CollisionTests(unittest.TestCase):
@@ -34,6 +35,33 @@ class CollisionTests(unittest.TestCase):
 
         self.assertEqual(engine.score, 2)
         self.assertEqual(engine.objects, [])
+
+
+class BasketMovementTests(unittest.TestCase):
+    def test_left_boundary_keeps_entire_basket_on_screen(self):
+        engine = GameEngine()
+        engine.basket.x = 0
+
+        engine.basket.move(-1, WIDTH)
+
+        self.assertEqual(engine.basket.get_rect().left, 0)
+
+    def test_right_boundary_keeps_entire_basket_on_screen(self):
+        engine = GameEngine()
+        engine.basket.x = WIDTH
+
+        engine.basket.move(1, WIDTH)
+
+        self.assertEqual(engine.basket.get_rect().right, WIDTH)
+
+    def test_held_direction_moves_once_per_frame(self):
+        engine = GameEngine()
+        starting_x = engine.basket.x
+
+        for _ in range(10):
+            engine.basket.move(1, WIDTH)
+
+        self.assertEqual(engine.basket.x, starting_x + 10 * engine.basket.speed)
 
 
 if __name__ == "__main__":
