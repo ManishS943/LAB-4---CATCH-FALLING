@@ -2,8 +2,11 @@ import sys
 import unittest
 from pathlib import Path
 
+import pygame
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from game.basket import BOOST_DURATION_FRAMES, BOOST_MULTIPLIER
 from game.collision import is_caught
 from game.falling_object import FallingObject
 from game.game_engine import (
@@ -96,6 +99,26 @@ class SpawningTests(unittest.TestCase):
 
         self.assertTrue(all(MIN_SPAWN_INTERVAL_FRAMES <= delay <= MAX_SPAWN_INTERVAL_FRAMES for delay in delays))
         self.assertGreater(len(delays), 1)
+
+
+class SpeedBoostTests(unittest.TestCase):
+    def test_space_activates_speed_boost(self):
+        engine = GameEngine()
+
+        engine.handle_keydown(pygame.K_SPACE)
+
+        self.assertTrue(engine.basket.is_boosted)
+        self.assertEqual(engine.basket.speed, engine.basket.normal_speed * BOOST_MULTIPLIER)
+
+    def test_speed_returns_to_normal_after_duration(self):
+        engine = GameEngine()
+        engine.basket.activate_boost()
+
+        for _ in range(BOOST_DURATION_FRAMES):
+            engine.basket.update_boost()
+
+        self.assertFalse(engine.basket.is_boosted)
+        self.assertEqual(engine.basket.speed, engine.basket.normal_speed)
 
 
 if __name__ == "__main__":
